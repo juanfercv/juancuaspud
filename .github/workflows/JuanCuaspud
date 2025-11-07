@@ -1,0 +1,87 @@
+name: CI/CD jfcv
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🧾 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8
+
+    - name: ✅ Check syntax
+      run: |
+        python -m py_compile app.py
+
+    - name: 🧹 Run lint
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: 🏗️ Build Docker image
+      run: |
+        docker build -t holaflask .
+
+    - name: 🧪 Test Docker image
+      run: |
+        docker run -d -p 5000:5000 --name test-holaflask holaflask
+        sleep 5
+        curl -f http://localhost:5000 || exit 1
+        docker rm -f test-holaflask
+
+    - name: 🔐 Set up Docker Buildx
+      if: github.event_name == 'push' || github.event_name == 'release'
+      uses: docker/setup-buildx-action@v3
+
+    - name: 🔐 Login to GitHub Container Registry
+      if: github.event_name == 'push' || github.event_name == 'release'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🏷️ Prepare Docker metadata
+      if: github.event_name == 'push' || github.event_name == 'release'
+      id: meta
+      run: |
+        echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        echo "SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+    - name: 🚀 Build and push Docker image
+      if: github.event_name == 'push' || github.event_name == 'release'
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          ghcr.io/${{ env.REPO_LOWER }}:latest
+          ghcr.io/${{ env.REPO_LOWER }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
