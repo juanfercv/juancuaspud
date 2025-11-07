@@ -1,4 +1,4 @@
-name: CI/CD Flask App
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
   pull_request:
 
-permissions:
+  permissions:
   contents: read
   packages: write
 
@@ -40,7 +40,7 @@ jobs:
         # Exit-zero treats all errors as warnings
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: 🗄️ Build Docker image
+    - name: 🏗️ Build Docker image
       run: |
         docker build -t holaflask .
 
@@ -51,7 +51,7 @@ jobs:
         curl -f http://localhost:5000 || exit 1
         docker rm -f test-holaflask
 
-    - name: 🔨 Set up Docker Buildx
+    - name: 🔐 Set up Docker Buildx
       if: github.event_name == 'push' || github.event_name == 'release'
       uses: docker/setup-buildx-action@v3
 
@@ -80,6 +80,5 @@ jobs:
         tags: |
           ghcr.io/${{ env.REPO_LOWER }}:latest
           ghcr.io/${{ env.REPO_LOWER }}:${{ github.sha }}
-          ghcr.io/${{ env.REPO_LOWER }}:${{ env.SHA_SHORT }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
