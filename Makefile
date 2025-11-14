@@ -1,4 +1,4 @@
-APP_NAME=pgcuaspud
+APP_NAME=cuaspud
 STACK_FILE=stack.yml
 STACK_NAME=ecuador
 
