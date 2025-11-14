@@ -49,9 +49,9 @@ jobs:
 
     - name: 🧪 Test Docker image
       run: |
-        docker run -d -p 5000:5000 --name test-holaflask holaflask
+        docker run -d -p 2407:2407 --name test-holaflask holaflask
         sleep 5
-        curl -f http://localhost:5000 || exit 1
+        curl -f http://localhost:2407 || exit 1
         docker rm -f test-holaflask
 
     - name: 🔐 Set up Docker Buildx
