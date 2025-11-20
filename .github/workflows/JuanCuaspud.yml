@@ -78,3 +78,14 @@ jobs:
           echo "descargando la img desde git"
           echo "${{ secrets.GHCR_PATH }}" docker login ghcr.io -u juanfercv --password-stdin
           docker pull ghcr.io/juanfercv/juancuaspud:latest
+
+          echo "deteniendo los servicios"
+          docker stack rm fernando || true
+
+          echo "esperar 20s"
+          sleep 20
+
+          echo "desplegando el stack"
+          docker stack deploy --with-registry-auth -c stack.yml fernando
+
+          docker ps

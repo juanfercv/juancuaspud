@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   cuaspud:
-    image: cuaspud:latest
+    image: ghcr.io/juanfercv/juancuaspud:latest
     build: .
     deploy:
       replicas: 1
