@@ -63,3 +63,18 @@ jobs:
         port: ${{ secrets.VPS_SSH_PORT }}
         source: "stack.yml"
         target: "/home/${{ secrets.VPS_USER }}/deploy1"
+
+    - name: despliegue de servicio
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        scrip: |
+          echo "desplegando servicios"
+          cd ~/deploy1
+          
+          echo "descargando la img desde git"
+          echo "${{ secrets.GHCR_PATH }}" docker login ghcr.io -u juanfercv --password-stdin
+          docker pull ghcr.io/juanfercv/juancuaspud:latest
